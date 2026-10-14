@@ -1,4 +1,5 @@
 import com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesStrategy
+import java.util.Base64
 
 plugins {
   alias(libs.plugins.android.application)
@@ -22,6 +23,16 @@ android {
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
+  // Automatically decode debug.keystore from base64 if running in CI or fresh checkout
+  val debugKeystoreFile = file("${rootDir}/debug.keystore")
+  val debugKeystoreBase64File = file("${rootDir}/debug.keystore.base64")
+  if (!debugKeystoreFile.exists() && debugKeystoreBase64File.exists()) {
+    try {
+      val decoded = Base64.getMimeDecoder().decode(debugKeystoreBase64File.readText().trim())
+      debugKeystoreFile.writeBytes(decoded)
+    } catch (_: Exception) {}
+  }
+
   // Do not remove or modify these signingConfigs. They are necessary for building, installing,
   // and updating Android apps in AI Studio.
   signingConfigs {
@@ -33,7 +44,8 @@ android {
       keyPassword = System.getenv("KEY_PASSWORD")
     }
     create("debugConfig") {
-      storeFile = file("${rootDir}/debug.keystore")
+      val fallbackKeystore = file("${System.getProperty("user.home")}/.android/debug.keystore")
+      storeFile = if (debugKeystoreFile.exists()) debugKeystoreFile else fallbackKeystore
       storePassword = "android"
       keyAlias = "androiddebugkey"
       keyPassword = "android"
