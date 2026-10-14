@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Glowing rounded badge background -->
+    <path
+        android:pathData="M54,23 C69.46,23 82,35.54 82,51 C82,66.46 69.46,79 54,79 C38.54,79 26,66.46 26,51 C26,35.54 38.54,23 54,23 Z"
+        android:fillColor="#1E1638"
+        android:strokeWidth="1.5"
+        android:strokeColor="#4A347F" />
+
+    <!-- Stylized Habit Flame -->
+    <path android:pathData="M54,28 C56,33 60,37 60,42 C60,45.3 57.3,48 54,48 C50.7,48 48,45.3 48,42 C48,39 50,35 54,28 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="54"
+                android:startY="28"
+                android:endX="54"
+                android:endY="48"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FBBF24" />
+                <item android:offset="1.0" android:color="#EA580C" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Glowing Neon Pulse Wave -->
+    <path
+        android:pathData="M 27,56 L 39,56 L 45,46 L 50,65 L 56,37 L 62,61 L 67,50 L 72,56 L 81,56"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:startX="27"
+                android:startY="51"
+                android:endX="81"
+                android:endY="51"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#8B5CF6" />
+                <item android:offset="0.5" android:color="#6366F1" />
+                <item android:offset="1.0" android:color="#06B6D4" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Glowing dot on the pulse apex -->
+    <path
+        android:pathData="M56,37 m-2.5,0 a2.5,2.5 0 1,0 5,0 a2.5,2.5 0 1,0 -5,0"
+        android:fillColor="#67E8F9" />
+</vector>

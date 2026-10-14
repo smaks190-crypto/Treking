@@ -1,0 +1,6 @@
+{
+  "name": "PulseHabit",
+  "description": "Интерактивный дашборд привычек с синхронизацией Firebase и неоновой киберпанк эстетикой",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

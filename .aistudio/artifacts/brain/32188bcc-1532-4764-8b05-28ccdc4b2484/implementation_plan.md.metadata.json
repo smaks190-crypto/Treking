@@ -1,0 +1,6 @@
+{
+  "summary": "Комплексный архитектурный план создания нативного Android-приложения PulseHabit на базе Jetpack Compose с синхронизацией данных через Firebase Firestore, авторизацией через Google Sign-In (Credential Manager), интерактивными графиками (столбцы и волновой Безье-график), матрицей недели и подсчетом стриков в неоновом темном стиле.",
+  "updatedAt": "2026-10-14T05:56:46.975588459Z",
+  "requestFeedback": true,
+  "userFacing": true
+}
