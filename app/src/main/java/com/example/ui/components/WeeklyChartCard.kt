@@ -43,13 +43,13 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.ChartMode
 import com.example.ui.DayStat
 import com.example.ui.theme.BgCard
 import com.example.ui.theme.BorderDark
-import com.example.ui.theme.BorderHighlight
 import com.example.ui.theme.NeonCyan
 import com.example.ui.theme.NeonEmerald
 import com.example.ui.theme.NeonViolet
@@ -77,42 +77,49 @@ fun WeeklyChartCard(
             .padding(18.dp)
     ) {
         Column {
-            // Header with Switcher
+            // Header with Switcher properly separated
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier.weight(1f, fill = false),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Icon(
                         imageVector = Icons.Default.Timeline,
                         contentDescription = null,
                         tint = NeonCyan,
-                        modifier = Modifier.size(22.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text(
                             text = "Динамика недели (Пн–Вс)",
                             color = TextPrimary,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                         Text(
-                            text = "Процент и количество закрытых целей",
+                            text = "Процент выполнения по дням",
                             color = TextMuted,
                             fontSize = 11.sp
                         )
                     }
                 }
 
+                Spacer(modifier = Modifier.width(8.dp))
+
                 // Switcher pill
                 Row(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
+                        .clip(RoundedCornerShape(10.dp))
                         .background(Color(0xFF0F172A))
-                        .border(1.dp, BorderDark, RoundedCornerShape(12.dp))
-                        .padding(3.dp)
+                        .border(1.dp, BorderDark, RoundedCornerShape(10.dp))
+                        .padding(2.dp)
                 ) {
                     // Bar button
                     Box(
@@ -121,16 +128,16 @@ fun WeeklyChartCard(
                             .clip(RoundedCornerShape(8.dp))
                             .background(if (chartMode == ChartMode.BAR) NeonViolet else Color.Transparent)
                             .clickable { onSetChartMode(ChartMode.BAR) }
-                            .padding(horizontal = 10.dp, vertical = 6.dp)
+                            .padding(horizontal = 9.dp, vertical = 5.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 imageVector = Icons.Default.BarChart,
                                 contentDescription = "Столбцы",
                                 tint = if (chartMode == ChartMode.BAR) Color.White else TextMuted,
-                                modifier = Modifier.size(14.dp)
+                                modifier = Modifier.size(13.dp)
                             )
-                            Spacer(modifier = Modifier.width(4.dp))
+                            Spacer(modifier = Modifier.width(3.dp))
                             Text(
                                 text = "Столбцы",
                                 color = if (chartMode == ChartMode.BAR) Color.White else TextMuted,
@@ -147,16 +154,16 @@ fun WeeklyChartCard(
                             .clip(RoundedCornerShape(8.dp))
                             .background(if (chartMode == ChartMode.WAVE) NeonViolet else Color.Transparent)
                             .clickable { onSetChartMode(ChartMode.WAVE) }
-                            .padding(horizontal = 10.dp, vertical = 6.dp)
+                            .padding(horizontal = 9.dp, vertical = 5.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 imageVector = Icons.Default.ShowChart,
                                 contentDescription = "Волна",
                                 tint = if (chartMode == ChartMode.WAVE) Color.White else TextMuted,
-                                modifier = Modifier.size(14.dp)
+                                modifier = Modifier.size(13.dp)
                             )
-                            Spacer(modifier = Modifier.width(4.dp))
+                            Spacer(modifier = Modifier.width(3.dp))
                             Text(
                                 text = "Волна",
                                 color = if (chartMode == ChartMode.WAVE) Color.White else TextMuted,
@@ -168,13 +175,13 @@ fun WeeklyChartCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
-            // Chart Canvas area
+            // Chart area
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp)
+                    .height(190.dp)
             ) {
                 // Dashed horizontal guidelines
                 Canvas(modifier = Modifier.fillMaxSize()) {
@@ -183,7 +190,7 @@ fun WeeklyChartCard(
                     for (i in 0..steps) {
                         val y = size.height * (i.toFloat() / steps)
                         drawLine(
-                            color = Color(0xFF1E293B).copy(alpha = 0.6f),
+                            color = Color(0xFF1E293B).copy(alpha = 0.5f),
                             start = Offset(0f, y),
                             end = Offset(size.width, y),
                             strokeWidth = 1.dp.toPx(),
@@ -212,13 +219,16 @@ fun WeeklyChartCard(
             HorizontalDivider(color = BorderDark, thickness = 1.dp)
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Footer
+            // Footer - robust layout that never wraps awkwardly
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Box(
                         modifier = Modifier
                             .size(6.dp)
@@ -229,15 +239,20 @@ fun WeeklyChartCard(
                     Text(
                         text = bestDaySummary,
                         color = TextSecondary,
-                        fontSize = 11.sp
+                        fontSize = 11.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
+                Spacer(modifier = Modifier.width(8.dp))
+
                 Text(
-                    text = "Средний результат: $averagePercent% в день",
+                    text = "Среднее: $averagePercent% / день",
                     color = TextMuted,
                     fontFamily = FontFamily.Monospace,
-                    fontSize = 11.sp
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold
                 )
             }
         }
@@ -253,7 +268,7 @@ private fun BarChartView(
     Row(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 4.dp),
+            .padding(horizontal = 2.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.Bottom
     ) {
@@ -261,7 +276,7 @@ private fun BarChartView(
             val isSelected = stat.dayIndex == activeDayIndex
             val heightFraction by animateFloatAsState(
                 targetValue = (stat.percent / 100f).coerceIn(0.06f, 1f),
-                animationSpec = tween(450),
+                animationSpec = tween(400),
                 label = "bar_height"
             )
 
@@ -283,7 +298,7 @@ private fun BarChartView(
                     .weight(1f)
                     .fillMaxHeight()
                     .clickable { onSelectDay(stat.dayIndex) }
-                    .padding(horizontal = 3.dp),
+                    .padding(horizontal = 2.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Bottom
             ) {
@@ -302,16 +317,16 @@ private fun BarChartView(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
 
-                // Bar track & fill
+                // Bar track & fill with fixed width for perfect vertical axis centering
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(130.dp)
+                        .width(30.dp)
+                        .height(120.dp)
                         .clip(RoundedCornerShape(8.dp))
                         .background(Color(0xFF0F172A))
                         .border(
                             1.dp,
-                            if (isSelected) NeonCyan.copy(alpha = 0.5f) else BorderDark,
+                            if (isSelected) NeonCyan.copy(alpha = 0.6f) else BorderDark,
                             RoundedCornerShape(8.dp)
                         )
                         .padding(2.dp),
@@ -354,16 +369,16 @@ private fun WaveChartView(
 
             val w = size.width
             val h = size.height
-            val padX = 28.dp.toPx()
+            val padX = 24.dp.toPx()
             val stepX = (w - padX * 2) / (weekStats.size - 1)
 
             val points = weekStats.mapIndexed { i, stat ->
                 val x = padX + i * stepX
-                val y = h - (stat.percent / 100f) * (h - 32.dp.toPx()) - 16.dp.toPx()
+                val y = h - (stat.percent / 100f) * (h - 28.dp.toPx()) - 14.dp.toPx()
                 Offset(x, y)
             }
 
-            // Build smooth Bezier path
+            // Smooth Bezier path
             val strokePath = Path().apply {
                 moveTo(points.first().x, points.first().y)
                 for (i in 0 until points.size - 1) {
@@ -384,7 +399,7 @@ private fun WaveChartView(
                 close()
             }
 
-            // Draw area gradient
+            // Area gradient
             drawPath(
                 path = areaPath,
                 brush = Brush.verticalGradient(
@@ -396,24 +411,24 @@ private fun WaveChartView(
                 )
             )
 
-            // Draw wave line
+            // Wave stroke
             drawPath(
                 path = strokePath,
                 brush = Brush.horizontalGradient(listOf(NeonViolet, NeonCyan, NeonEmerald)),
-                style = Stroke(width = 3.5.dp.toPx(), cap = StrokeCap.Round)
+                style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
             )
 
-            // Draw node circles
+            // Node circles
             points.forEachIndexed { idx, pt ->
                 val isSelected = idx == activeDayIndex
                 drawCircle(
                     color = Color(0xFF090D16),
-                    radius = if (isSelected) 8.dp.toPx() else 5.dp.toPx(),
+                    radius = if (isSelected) 7.dp.toPx() else 4.5.dp.toPx(),
                     center = pt
                 )
                 drawCircle(
                     color = if (isSelected) NeonCyan else NeonViolet,
-                    radius = if (isSelected) 6.dp.toPx() else 4.dp.toPx(),
+                    radius = if (isSelected) 5.dp.toPx() else 3.5.dp.toPx(),
                     center = pt
                 )
             }

@@ -1,19 +1,52 @@
 package com.example.data
 
+import android.content.Context
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 
-class HabitRepository(private val dao: HabitDao) {
+import com.example.widget.HabitWidgetProvider
+
+class HabitRepository(
+    private val dao: HabitDao,
+    private val context: Context
+) {
+    private val prefs = context.getSharedPreferences("pulse_habit_prefs", Context.MODE_PRIVATE)
+
+    private val _isDemoActive = MutableStateFlow(prefs.getBoolean(KEY_IS_DEMO_ACTIVE, true))
+    val isDemoActive: StateFlow<Boolean> = _isDemoActive.asStateFlow()
+
     val allHabits: Flow<List<HabitEntity>> = dao.getAllHabits()
 
     suspend fun ensureInitialData() {
         val count = dao.countHabits()
-        if (count == 0) {
-            resetToDemo()
+        if (isDemoActive.value && count == 0) {
+            seedDemoData()
         }
     }
 
-    suspend fun resetToDemo() {
+    suspend fun exitDemoMode() {
+        prefs.edit().putBoolean(KEY_IS_DEMO_ACTIVE, false).apply()
+        _isDemoActive.value = false
+        dao.deleteAll()
+        notifyWidget()
+    }
+
+    suspend fun clearAllHabits() {
+        dao.deleteAll()
+        notifyWidget()
+    }
+
+    suspend fun restoreDemoMode() {
+        prefs.edit().putBoolean(KEY_IS_DEMO_ACTIVE, true).apply()
+        _isDemoActive.value = true
+        seedDemoData()
+        notifyWidget()
+    }
+
+    private suspend fun seedDemoData() {
         dao.deleteAll()
         val demoHabits = listOf(
             HabitEntity(
@@ -63,12 +96,14 @@ class HabitRepository(private val dao: HabitDao) {
             )
         )
         dao.insertHabits(demoHabits)
+        notifyWidget()
     }
 
     suspend fun toggleHabitDay(habitId: String, dayIndex: Int) {
         val habits = dao.getAllHabits().first()
         val target = habits.find { it.id == habitId } ?: return
         dao.updateHabit(target.withToggledDay(dayIndex))
+        notifyWidget()
     }
 
     suspend fun markAllDay(dayIndex: Int, completed: Boolean) {
@@ -76,6 +111,7 @@ class HabitRepository(private val dao: HabitDao) {
         habits.forEach { habit ->
             dao.updateHabit(habit.withDayValue(dayIndex, completed))
         }
+        notifyWidget()
     }
 
     suspend fun addHabit(
@@ -93,9 +129,21 @@ class HabitRepository(private val dao: HabitDao) {
             priorStreak = priorStreak
         )
         dao.insertHabit(newHabit)
+        notifyWidget()
     }
 
     suspend fun deleteHabit(habitId: String) {
         dao.deleteHabitById(habitId)
+        notifyWidget()
+    }
+
+    private fun notifyWidget() {
+        try {
+            HabitWidgetProvider.updateAllWidgets(context)
+        } catch (_: Exception) {}
+    }
+
+    companion object {
+        private const val KEY_IS_DEMO_ACTIVE = "is_demo_active"
     }
 }

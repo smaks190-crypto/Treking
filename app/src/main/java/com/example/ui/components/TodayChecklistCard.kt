@@ -78,20 +78,25 @@ fun TodayChecklistCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Icon(
                         imageVector = Icons.Default.CheckCircleOutline,
                         contentDescription = null,
                         tint = NeonViolet,
                         modifier = Modifier.size(22.dp)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(10.dp))
                     Column {
                         Text(
                             text = "Цели на ${activeDayFullName.lowercase()}",
                             color = TextPrimary,
                             fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                         Text(
                             text = "Быстрая отметка выполнения привычек",
@@ -100,6 +105,8 @@ fun TodayChecklistCard(
                         )
                     }
                 }
+
+                Spacer(modifier = Modifier.width(8.dp))
 
                 FilledTonalButton(
                     onClick = onToggleAll,
@@ -118,23 +125,23 @@ fun TodayChecklistCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             if (habits.isEmpty()) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 24.dp),
+                        .padding(vertical = 28.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Нет привычек. Нажмите «+ Новая привычка»",
+                        text = "Нет привычек. Нажмите «+ Новая» вверху",
                         color = TextMuted,
                         fontSize = 13.sp
                     )
                 }
             } else {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     habits.forEach { habit ->
                         val isDone = habit.isCompletedOnDay(activeDayIndex)
                         val colorDef = HabitThemeUtils.getColor(habit.color)
@@ -151,20 +158,20 @@ fun TodayChecklistCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             HorizontalDivider(color = BorderDark, thickness = 1.dp)
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // Footer
+            // Footer (pushed cleanly to opposite edges)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Нажатие мгновенно обновляет аналитику",
+                    text = "Нажатие обновляет аналитику",
                     color = TextMuted,
-                    fontSize = 11.sp
+                    fontSize = 12.sp
                 )
                 Text(
                     text = if (remainingCount == 0) "Все цели закрыты!" else "Осталось: $remainingCount",
@@ -192,7 +199,7 @@ private fun TodayHabitItemRow(
         label = "checkbox_scale"
     )
     val cardBg by animateColorAsState(
-        targetValue = if (isDone) Color(0xFF0F172A).copy(alpha = 0.9f) else Color(0xFF0F172A).copy(alpha = 0.4f),
+        targetValue = if (isDone) Color(0xFF0F172A).copy(alpha = 0.9f) else Color(0xFF0F172A).copy(alpha = 0.5f),
         label = "habit_card_bg"
     )
     val borderCol by animateColorAsState(
@@ -208,7 +215,7 @@ private fun TodayHabitItemRow(
             .background(cardBg)
             .border(1.dp, borderCol, RoundedCornerShape(14.dp))
             .clickable { onToggle() }
-            .padding(12.dp),
+            .padding(horizontal = 14.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -219,7 +226,7 @@ private fun TodayHabitItemRow(
             // Checkbox
             Box(
                 modifier = Modifier
-                    .size(26.dp)
+                    .size(28.dp)
                     .scale(scaleAnim)
                     .clip(RoundedCornerShape(8.dp))
                     .background(if (isDone) colorDef.primary else Color(0xFF1E293B))
@@ -235,12 +242,12 @@ private fun TodayHabitItemRow(
                         imageVector = Icons.Default.Check,
                         contentDescription = "Готово",
                         tint = Color.White,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(17.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(14.dp))
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -252,6 +259,7 @@ private fun TodayHabitItemRow(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
+                Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = habit.category,
                     color = colorDef.primary,
@@ -261,7 +269,7 @@ private fun TodayHabitItemRow(
             }
         }
 
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = Modifier.width(10.dp))
 
         // Flame streak badge
         Row(
@@ -269,7 +277,7 @@ private fun TodayHabitItemRow(
                 .clip(RoundedCornerShape(8.dp))
                 .background(Color(0xFF1E293B))
                 .border(1.dp, Color(0xFF334155), RoundedCornerShape(8.dp))
-                .padding(horizontal = 8.dp, vertical = 4.dp),
+                .padding(horizontal = 9.dp, vertical = 5.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(

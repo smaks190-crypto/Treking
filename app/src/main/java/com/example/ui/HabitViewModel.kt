@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
@@ -38,7 +37,11 @@ data class HabitUiState(
     val activeDayIndex: Int = 4, // 0 = Mon, ..., 4 = Fri
     val realTodayIndex: Int = 4,
     val chartMode: ChartMode = ChartMode.BAR,
+    val isDemoActive: Boolean = true,
     val showAddDialog: Boolean = false,
+    val showResetConfirmDialog: Boolean = false,
+    val showReminderDialog: Boolean = false,
+    val isReminderActive: Boolean = false,
     val toastMessage: String? = null,
     // 4 KPI metrics
     val todayCompletedCount: Int = 0,
@@ -72,6 +75,16 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
     private val _showAddDialog = MutableStateFlow(false)
     val showAddDialog: StateFlow<Boolean> = _showAddDialog.asStateFlow()
 
+    private val _showResetConfirmDialog = MutableStateFlow(false)
+    val showResetConfirmDialog: StateFlow<Boolean> = _showResetConfirmDialog.asStateFlow()
+
+    val reminderManager = com.example.reminder.HabitReminderManager(application)
+    private val _showReminderDialog = MutableStateFlow(false)
+    val showReminderDialog: StateFlow<Boolean> = _showReminderDialog.asStateFlow()
+
+    private val _isReminderActive = MutableStateFlow(reminderManager.isReminderEnabled)
+    val isReminderActive: StateFlow<Boolean> = _isReminderActive.asStateFlow()
+
     private val _toastMessage = MutableStateFlow<String?>(null)
     val toastMessage: StateFlow<String?> = _toastMessage.asStateFlow()
 
@@ -79,7 +92,7 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         val db = PulseHabitDatabase.getDatabase(application)
-        repository = HabitRepository(db.habitDao())
+        repository = HabitRepository(db.habitDao(), application)
 
         viewModelScope.launch {
             repository.ensureInitialData()
@@ -185,11 +198,27 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
 
         uiState = combine(
             baseStateFlow,
+            repository.isDemoActive,
             _showAddDialog,
+            _showResetConfirmDialog,
+            _showReminderDialog,
+            _isReminderActive,
             _toastMessage
-        ) { baseState, showDialog, toast ->
+        ) { args: Array<Any?> ->
+            val baseState = args[0] as HabitUiState
+            val isDemo = args[1] as Boolean
+            val showAdd = args[2] as Boolean
+            val showReset = args[3] as Boolean
+            val showReminder = args[4] as Boolean
+            val isReminderOn = args[5] as Boolean
+            val toast = args[6] as String?
+
             baseState.copy(
-                showAddDialog = showDialog,
+                isDemoActive = isDemo,
+                showAddDialog = showAdd,
+                showResetConfirmDialog = showReset,
+                showReminderDialog = showReminder,
+                isReminderActive = isReminderOn,
                 toastMessage = toast
             )
         }.stateIn(
@@ -197,6 +226,16 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = HabitUiState()
         )
+    }
+
+    fun setShowReminderDialog(show: Boolean) {
+        _showReminderDialog.value = show
+        _isReminderActive.value = reminderManager.isReminderEnabled
+    }
+
+    fun onReminderSaved(message: String) {
+        _isReminderActive.value = reminderManager.isReminderEnabled
+        showToast(message)
     }
 
     fun setActiveDay(dayIndex: Int) {
@@ -213,6 +252,42 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setShowAddDialog(show: Boolean) {
         _showAddDialog.value = show
+    }
+
+    fun onResetClicked() {
+        _showResetConfirmDialog.value = true
+    }
+
+    fun dismissResetConfirmDialog() {
+        _showResetConfirmDialog.value = false
+    }
+
+    fun confirmExitDemoMode() {
+        viewModelScope.launch {
+            val isDemo = uiState.value.isDemoActive
+            val hasHabits = uiState.value.habits.isNotEmpty()
+            if (isDemo) {
+                repository.exitDemoMode()
+                showToast("Демо-режим отключен. Все данные очищены")
+            } else if (hasHabits) {
+                repository.clearAllHabits()
+                showToast("Все привычки очищены")
+            } else {
+                repository.restoreDemoMode()
+                _activeDayIndex.value = 4
+                showToast("Демо-режим включен, примеры загружены")
+            }
+            _showResetConfirmDialog.value = false
+        }
+    }
+
+    fun restoreDemoMode() {
+        viewModelScope.launch {
+            repository.restoreDemoMode()
+            _activeDayIndex.value = 4 // Set focus on Friday to show rich demo streaks
+            _selectedCategory.value = "Все"
+            showToast("Демо-режим включен, примеры загружены")
+        }
     }
 
     fun toggleHabitDay(habitId: String, dayIndex: Int) {
@@ -252,15 +327,6 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             repository.deleteHabit(habitId)
             showToast("Привычка «$title» удалена")
-        }
-    }
-
-    fun resetToDemo() {
-        viewModelScope.launch {
-            repository.resetToDemo()
-            _activeDayIndex.value = 4 // Set focus on Friday to show rich demo streaks
-            _selectedCategory.value = "Все"
-            showToast("Демо-данные успешно восстановлены")
         }
     }
 

@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">PulseHabit</string>
+    <string name="widget_description">Виджет отметок привычек на сегодня</string>
+    <string name="widget_title">PulseHabit</string>
+    <string name="widget_empty">Нет привычек на сегодня</string>
+    <string name="notification_channel_name">Напоминания о привычках</string>
+    <string name="notification_channel_desc">Ежедневные уведомления о невыполненных привычках</string>
 </resources>

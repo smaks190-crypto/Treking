@@ -17,24 +17,24 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.LocalFireDepartment
-import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -45,7 +45,6 @@ import com.example.data.HabitEntity
 import com.example.ui.HabitThemeUtils
 import com.example.ui.theme.BgCard
 import com.example.ui.theme.BorderDark
-import com.example.ui.theme.BorderHighlight
 import com.example.ui.theme.NeonCyan
 import com.example.ui.theme.NeonOrange
 import com.example.ui.theme.NeonRose
@@ -54,16 +53,24 @@ import com.example.ui.theme.TextMuted
 import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.TextSecondary
 
+private val ColHabitWidth = 210.dp
+private val ColDayWidth = 44.dp
+private val ColWeekRateWidth = 84.dp
+private val ColStreakWidth = 74.dp
+private val ColActionWidth = 36.dp
+
 @Composable
 fun HabitMatrixCard(
     habits: List<HabitEntity>,
     categories: List<String>,
     selectedCategory: String,
     activeDayIndex: Int,
+    isDemoActive: Boolean,
     onSelectCategory: (String) -> Unit,
     onToggleDay: (String, Int) -> Unit,
     onDeleteHabit: (String, String) -> Unit,
     onOpenAddDialog: () -> Unit,
+    onRestoreDemo: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val shortDays = listOf("Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс")
@@ -88,18 +95,18 @@ fun HabitMatrixCard(
                         imageVector = Icons.Default.CalendarMonth,
                         contentDescription = null,
                         tint = NeonCyan,
-                        modifier = Modifier.size(22.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text(
-                            text = "Матрица привычек и серий за неделю",
+                            text = "Матрица привычек за неделю",
                             color = TextPrimary,
-                            fontSize = 16.sp,
+                            fontSize = 15.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "Нажимайте на ячейки любого дня (Пн–Вс), чтобы изменить статус",
+                            text = "Нажимайте на ячейки любого дня (Пн–Вс)",
                             color = TextMuted,
                             fontSize = 11.sp
                         )
@@ -107,7 +114,7 @@ fun HabitMatrixCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             // Category filter chips
             Row(
@@ -154,7 +161,7 @@ fun HabitMatrixCard(
                         imageVector = Icons.Default.AutoAwesome,
                         contentDescription = null,
                         tint = TextMuted,
-                        modifier = Modifier.size(40.dp)
+                        modifier = Modifier.size(36.dp)
                     )
                     Spacer(modifier = Modifier.height(10.dp))
                     Text(
@@ -165,21 +172,33 @@ fun HabitMatrixCard(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Добавьте свою первую цель или верните демо-данные",
+                        text = "Начните с чистого листа или загрузите примеры",
                         color = TextMuted,
                         fontSize = 12.sp
                     )
                     Spacer(modifier = Modifier.height(14.dp))
-                    Button(
-                        onClick = onOpenAddDialog,
-                        colors = ButtonDefaults.buttonColors(containerColor = NeonViolet),
-                        shape = RoundedCornerShape(10.dp)
-                    ) {
-                        Text(text = "+ Добавить привычку", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Button(
+                            onClick = onOpenAddDialog,
+                            colors = ButtonDefaults.buttonColors(containerColor = NeonViolet),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Text(text = "+ Добавить привычку", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
+
+                        if (!isDemoActive) {
+                            OutlinedButton(
+                                onClick = onRestoreDemo,
+                                shape = RoundedCornerShape(10.dp),
+                                border = ButtonDefaults.outlinedButtonBorder.copy(brush = androidx.compose.ui.graphics.SolidColor(BorderDark))
+                            ) {
+                                Text(text = "Загрузить примеры", color = TextSecondary, fontSize = 12.sp)
+                            }
+                        }
                     }
                 }
             } else {
-                // Horizontally scrollable Matrix table
+                // Horizontally scrollable Matrix table with mathematically strict column alignment
                 val tableScrollState = rememberScrollState()
                 Column(
                     modifier = Modifier
@@ -198,15 +217,13 @@ fun HabitMatrixCard(
                             color = TextMuted,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.width(220.dp)
+                            modifier = Modifier.width(ColHabitWidth)
                         )
 
                         shortDays.forEachIndexed { dIdx, dayName ->
                             val isFocus = dIdx == activeDayIndex
                             Box(
-                                modifier = Modifier
-                                    .width(42.dp)
-                                    .padding(horizontal = 2.dp),
+                                modifier = Modifier.width(ColDayWidth),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
@@ -219,31 +236,39 @@ fun HabitMatrixCard(
                             }
                         }
 
-                        Text(
-                            text = "ЗА НЕДЕЛЮ",
-                            color = TextMuted,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.width(90.dp),
-                            letterSpacing = 0.5.sp
-                        )
+                        Box(
+                            modifier = Modifier.width(ColWeekRateWidth),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "ЗА НЕДЕЛЮ",
+                                color = TextMuted,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 0.5.sp
+                            )
+                        }
 
-                        Text(
-                            text = "СТРИК",
-                            color = TextMuted,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.width(85.dp),
-                            letterSpacing = 0.5.sp
-                        )
+                        Box(
+                            modifier = Modifier.width(ColStreakWidth),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "СТРИК",
+                                color = TextMuted,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 0.5.sp
+                            )
+                        }
 
-                        Spacer(modifier = Modifier.width(40.dp))
+                        Spacer(modifier = Modifier.width(ColActionWidth))
                     }
 
                     HorizontalDivider(color = BorderDark, thickness = 1.dp)
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
 
-                    // Table Rows
+                    // Table Rows with increased height and spacious padding
                     habits.forEach { habit ->
                         val colorDef = HabitThemeUtils.getColor(habit.color)
                         val iconVector = HabitThemeUtils.getIcon(habit.icon)
@@ -255,17 +280,17 @@ fun HabitMatrixCard(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 6.dp),
+                                .padding(vertical = 8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // Column 1: Habit info
+                            // Column 1: Habit info (width = ColHabitWidth)
                             Row(
-                                modifier = Modifier.width(220.dp),
+                                modifier = Modifier.width(ColHabitWidth),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Box(
                                     modifier = Modifier
-                                        .size(36.dp)
+                                        .size(38.dp)
                                         .clip(RoundedCornerShape(10.dp))
                                         .background(colorDef.bgSoft)
                                         .border(1.dp, colorDef.borderSoft, RoundedCornerShape(10.dp)),
@@ -275,7 +300,7 @@ fun HabitMatrixCard(
                                         imageVector = iconVector,
                                         contentDescription = null,
                                         tint = colorDef.primary,
-                                        modifier = Modifier.size(18.dp)
+                                        modifier = Modifier.size(19.dp)
                                     )
                                 }
 
@@ -285,36 +310,35 @@ fun HabitMatrixCard(
                                     Text(
                                         text = habit.title,
                                         color = TextPrimary,
-                                        fontSize = 13.sp,
+                                        fontSize = 13.5.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
                                     )
+                                    Spacer(modifier = Modifier.height(2.dp))
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Text(
                                             text = habit.category,
                                             color = colorDef.primary,
-                                            fontSize = 10.sp,
+                                            fontSize = 11.sp,
                                             fontWeight = FontWeight.Medium
                                         )
                                         if (habit.priorStreak > 0) {
                                             Text(
                                                 text = " • +${habit.priorStreak} дн.",
                                                 color = TextMuted,
-                                                fontSize = 10.sp
+                                                fontSize = 10.5.sp
                                             )
                                         }
                                     }
                                 }
                             }
 
-                            // Column 2: 7 day check buttons
+                            // Column 2: 7 day check buttons (each exactly ColDayWidth)
                             week.forEachIndexed { dIdx, isDone ->
                                 val isFocusCol = dIdx == activeDayIndex
                                 Box(
-                                    modifier = Modifier
-                                        .width(42.dp)
-                                        .padding(horizontal = 3.dp),
+                                    modifier = Modifier.width(ColDayWidth),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Box(
@@ -344,11 +368,11 @@ fun HabitMatrixCard(
                                 }
                             }
 
-                            // Column 3: Week rate
+                            // Column 3: Week rate (ColWeekRateWidth)
                             Column(
                                 modifier = Modifier
-                                    .width(90.dp)
-                                    .padding(horizontal = 6.dp),
+                                    .width(ColWeekRateWidth)
+                                    .padding(horizontal = 4.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
@@ -362,7 +386,7 @@ fun HabitMatrixCard(
                                 LinearProgressIndicator(
                                     progress = { weekRate / 100f },
                                     modifier = Modifier
-                                        .width(60.dp)
+                                        .width(56.dp)
                                         .height(4.dp)
                                         .clip(RoundedCornerShape(2.dp)),
                                     color = colorDef.primary,
@@ -370,11 +394,9 @@ fun HabitMatrixCard(
                                 )
                             }
 
-                            // Column 4: Streak badge
+                            // Column 4: Streak badge (ColStreakWidth)
                             Box(
-                                modifier = Modifier
-                                    .width(85.dp)
-                                    .padding(horizontal = 4.dp),
+                                modifier = Modifier.width(ColStreakWidth),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Row(
@@ -406,17 +428,22 @@ fun HabitMatrixCard(
                                 }
                             }
 
-                            // Column 5: Delete button
-                            IconButton(
-                                onClick = { onDeleteHabit(habit.id, habit.title) },
-                                modifier = Modifier.size(36.dp)
+                            // Column 5: Delete button (ColActionWidth)
+                            Box(
+                                modifier = Modifier.width(ColActionWidth),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.Delete,
-                                    contentDescription = "Удалить",
-                                    tint = NeonRose.copy(alpha = 0.7f),
-                                    modifier = Modifier.size(18.dp)
-                                )
+                                IconButton(
+                                    onClick = { onDeleteHabit(habit.id, habit.title) },
+                                    modifier = Modifier.size(34.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = "Удалить",
+                                        tint = NeonRose.copy(alpha = 0.7f),
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
                             }
                         }
                     }
